@@ -1,4 +1,4 @@
-module github.com/uccu/go-server-ws
+module github.com/uccu/go-ws-server
 
 go 1.14
 
