@@ -4,27 +4,30 @@ import "errors"
 
 // 删除客户端
 func (manager *Manager) DelClient(client *Client) {
-	manager.delclientsByUid(client.Uid)
+	manager.delClientByClientId(client.ClientId)
+	if client.UnionId != "" {
+		manager.delClientUnion(client.UnionId)
+	}
 	for groupKey := range client.GroupList {
-		manager.delGroupClient(groupKey, client.Uid)
+		manager.delGroupClient(groupKey, client.ClientId)
 	}
 	for systemKey := range client.SystemList {
-		manager.delSystemClient(systemKey, client.Uid)
+		manager.delSystemClient(systemKey, client.ClientId)
 	}
 }
 
 // 添加客户端
 func (manager *Manager) addClient(client *Client) {
-	_, loaded := manager.clients.LoadOrStore(client.Uid, client)
+	_, loaded := manager.clients.LoadOrStore(client.ClientId, client)
 	if !loaded {
 		manager.clients.count++
 	}
 }
 
 // 获取所有的客户端
-func (manager *Manager) GetClientList(f func(uid UID, client *Client) bool) {
+func (manager *Manager) GetClientList(f func(clientId string, client *Client) bool) {
 	manager.clients.Range(func(key, value interface{}) bool {
-		return f(key.(UID), value.(*Client))
+		return f(key.(string), value.(*Client))
 	})
 }
 
@@ -33,17 +36,17 @@ func (manager *Manager) GetClientCount() int {
 	return manager.clients.count
 }
 
-// 通过uid删除client
-func (manager *Manager) delclientsByUid(uid UID) {
-	_, loaded := manager.clients.LoadAndDelete(uid)
+// 通过clientId删除client
+func (manager *Manager) delClientByClientId(clientId string) {
+	_, loaded := manager.clients.LoadAndDelete(clientId)
 	if loaded {
 		manager.clients.count--
 	}
 }
 
-// 通过uid获取client
-func (manager *Manager) GetClientByUid(uid UID) (*Client, error) {
-	if client, ok := manager.clients.Load(uid); !ok {
+// 通过clientId获取client
+func (manager *Manager) GetClientByClientId(clientId string) (*Client, error) {
+	if client, ok := manager.clients.Load(clientId); !ok {
 		return nil, errors.New("客户端不存在")
 	} else {
 		return client.(*Client), nil
@@ -51,7 +54,7 @@ func (manager *Manager) GetClientByUid(uid UID) (*Client, error) {
 }
 
 func (manager *Manager) SendAllMessage(ack string, data interface{}) {
-	manager.GetClientList(func(uid UID, client *Client) bool {
+	manager.GetClientList(func(clientId string, client *Client) bool {
 		client.SendMessage(ack, data)
 		return true
 	})

@@ -16,6 +16,12 @@ type routeRule struct {
 	middlewares MiddlewareList
 }
 
+type routeRuleMap map[string]*routeRule
+
+func (e *RouteGroup) Use(m ...HandlerFunc) {
+	e.middlewares = append(e.middlewares, m...)
+}
+
 func (e *RouteGroup) Group(path string, m ...HandlerFunc) *RouteGroup {
 
 	path = strings.ReplaceAll(path, "/", ".")

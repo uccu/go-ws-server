@@ -14,18 +14,18 @@ func NewContext(ack string, client *Client, message []byte, rule *routeRule) *Co
 	context.Ack = ack
 	context.Client = client
 	context.rule = rule
-	context.CtxNo = GetRandomStri(6)
-	context.RawMessage = message
+	context.RequestId = GetRandomStri(6)
+	context.rawMessage = message
 	return context
 }
 
 type Context struct {
-	CtxNo      string
+	RequestId  string
 	rule       *routeRule
 	Ack        string
 	Engine     *Engine
 	Client     *Client
-	RawMessage []byte
+	rawMessage []byte
 	nm         int
 }
 
@@ -33,23 +33,20 @@ func (c *Context) Next() {
 	c.nm++
 	if c.nm < len(c.rule.middlewares) {
 		c.rule.middlewares[c.nm](c)
-	} else {
+	} else if c.nm == len(c.rule.middlewares) {
 		c.rule.handleFunc(c)
 	}
 }
 
 func (c *Context) ShouldBind(i interface{}) error {
-	err := json.Unmarshal(c.RawMessage, i)
+	err := json.Unmarshal(c.rawMessage, i)
 	if err != nil {
-		logrus.Debug("uid: %d,err:%s", c.Client.Uid, err.Error())
+		logrus.Debug("clientId: %d,err:%s", c.Client.ClientId, err.Error())
 		return ErrBind
 	}
 	return nil
 }
 
-func (c *Context) GetLocalAddr() string {
-	return c.Engine.LocalAddr
-}
 func (c *Context) GetEngine() *Engine {
 	return c.Engine
 }

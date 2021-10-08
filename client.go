@@ -7,10 +7,10 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type UID = int64
 type Client struct {
 	Addr       string
-	Uid        UID
+	ClientId   string
+	UnionId    string
 	IsDeleted  bool
 	Socket     *websocket.Conn
 	GroupList  map[string]bool
@@ -29,10 +29,10 @@ func (c *Client) read() {
 			if err != nil {
 				if messageType == -1 && websocket.IsCloseError(err, websocket.CloseGoingAway, websocket.CloseNormalClosure, websocket.CloseNoStatusReceived) {
 					c.engine.Manager.DisConnect <- c
-					logrus.Debug("close disConnect, uid: %d", c.Uid)
+					logrus.Debug("close disConnect, clientId: %d", c.ClientId)
 					return
 				} else if messageType != websocket.PingMessage {
-					logrus.Debug("other disConnect, uid: %d", c.Uid)
+					logrus.Debug("other disConnect, clientId: %d", c.ClientId)
 					return
 				}
 			}
@@ -42,14 +42,14 @@ func (c *Client) read() {
 				ackData := &Ack{}
 				err := json.Unmarshal(message, ackData)
 				if err != nil {
-					logrus.Debug("unmarshal err, uid: %d,err: %s", c.Uid, err.Error())
+					logrus.Debug("unmarshal err, clientId: %d,err: %s", c.ClientId, err.Error())
 					continue
 				}
 
 				ack := ackData.Ack
 				rule, ok := c.engine.routeRule[ack]
 				if !ok {
-					logrus.Debug("no router, uid: %d", c.Uid)
+					logrus.Debug("no router, clientId: %d", c.ClientId)
 					continue
 				}
 
@@ -85,7 +85,7 @@ func (c *Client) SendMessage(ack string, data interface{}) {
 		Data:      data,
 	})
 	if err != nil {
-		logrus.Debug("send message err,uid: %d,err:%s", c.Uid, err.Error())
+		logrus.Debug("send message err,clientId: %d,err:%s", c.ClientId, err.Error())
 		c.engine.Manager.DisConnect <- c
 	}
 }
@@ -109,7 +109,17 @@ func (c *Client) SendErr(ack string, code int, msg string, datas ...interface{})
 		Data:      data,
 	})
 	if err != nil {
-		logrus.Debug("send message err,uid: %d,err:%s", c.Uid, err.Error())
+		logrus.Debug("send message err,clientId: %d,err:%s", c.ClientId, err.Error())
 		c.engine.Manager.DisConnect <- c
+	}
+}
+
+func newClient(socket *websocket.Conn, engine *Engine) *Client {
+	clientId := GetRandomStri(32)
+	return &Client{Socket: socket,
+		ClientId:   clientId,
+		engine:     engine,
+		GroupList:  map[string]bool{},
+		SystemList: map[string]bool{},
 	}
 }

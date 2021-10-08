@@ -2,7 +2,11 @@ package ws
 
 import (
 	"math/rand"
+	"net/http"
 	"time"
+
+	"github.com/gorilla/websocket"
+	"github.com/sirupsen/logrus"
 )
 
 func GetRandomStri(l int) string {
@@ -21,4 +25,24 @@ func GetRandomStri(l int) string {
 		}
 	}
 	return string(result)
+}
+
+func getSocket(w http.ResponseWriter, r *http.Request) *websocket.Conn {
+	upgrader := websocket.Upgrader{
+		ReadBufferSize:   1024,
+		WriteBufferSize:  1024,
+		HandshakeTimeout: 5 * time.Second,
+		CheckOrigin: func(r *http.Request) bool {
+			return true
+		},
+	}
+	socket, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		logrus.Errorf("Upgrade Error: %s", err.Error())
+		return nil
+	}
+
+	socket.SetReadLimit(8192)
+
+	return socket
 }
