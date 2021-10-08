@@ -44,7 +44,7 @@ func (e *Engine) Run(w http.ResponseWriter, r *http.Request, hooks ...Hook) {
 	}
 
 	client.read()
-	e.Manager.Connect <- client
+	e.Manager.connect <- client
 
 }
 

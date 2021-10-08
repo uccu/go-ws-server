@@ -12,26 +12,40 @@ type syncMap struct {
 	count int
 }
 
+type EventFunc func(*Manager, *Client) bool
+
 // 连接管理
 type Manager struct {
 	clients    *syncMap     // 全部的连接
 	unions     *syncMap     // 标记的连接
 	groups     *syncMap     // 分组的连接
 	systems    *syncMap     // 系统的连接
-	Connect    chan *Client // 连接处理
-	DisConnect chan *Client // 断开处理
+	connect    chan *Client // 连接处理
+	disConnect chan *Client // 断开处理
 	cancel     context.CancelFunc
+
+	connectFunc    []EventFunc
+	disconnectFunc []EventFunc
 }
 
 func newManager() *Manager {
 	return &Manager{
-		clients:    new(syncMap),
-		unions:     new(syncMap),
-		groups:     new(syncMap),
-		systems:    new(syncMap),
-		Connect:    make(chan *Client, 100),
-		DisConnect: make(chan *Client, 100),
+		clients:        new(syncMap),
+		unions:         new(syncMap),
+		groups:         new(syncMap),
+		systems:        new(syncMap),
+		connect:        make(chan *Client, 100),
+		disConnect:     make(chan *Client, 100),
+		connectFunc:    make([]EventFunc, 0),
+		disconnectFunc: make([]EventFunc, 0),
 	}
+}
+
+func (manager *Manager) Connect(f EventFunc) {
+	manager.connectFunc = append(manager.connectFunc, f)
+}
+func (manager *Manager) DisConnect(f EventFunc) {
+	manager.disconnectFunc = append(manager.disconnectFunc, f)
 }
 
 // 管道处理程序
@@ -41,9 +55,9 @@ func (manager *Manager) start() *Manager {
 	go func() {
 		for {
 			select {
-			case client := <-manager.Connect:
+			case client := <-manager.connect:
 				manager.eventConnect(client)
-			case client := <-manager.DisConnect:
+			case client := <-manager.disConnect:
 				manager.eventDisconnect(client)
 			case <-ctx.Done():
 				return
@@ -61,12 +75,23 @@ func (manager *Manager) close() {
 
 // 建立连接事件
 func (manager *Manager) eventConnect(client *Client) {
+	for _, f := range manager.connectFunc {
+		if !f(manager, client) {
+			return
+		}
+	}
+
 	logrus.Infof("WS用户连接, clientId: %d", client.ClientId)
 	manager.addClient(client)
 }
 
 // 断开连接时间
 func (manager *Manager) eventDisconnect(client *Client) {
+	for _, f := range manager.disconnectFunc {
+		if !f(manager, client) {
+			return
+		}
+	}
 	logrus.Infof("WS用户断开, clientId: %d", client.ClientId)
 	client.Socket.Close()
 	manager.DelClient(client)

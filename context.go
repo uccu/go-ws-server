@@ -15,7 +15,7 @@ func NewContext(ack string, client *Client, message []byte, rule *routeRule) *Co
 	context.Client = client
 	context.rule = rule
 	context.RequestId = GetRandomStri(6)
-	context.rawMessage = message
+	context.RawMessage = message
 	return context
 }
 
@@ -25,7 +25,7 @@ type Context struct {
 	Ack        string
 	Engine     *Engine
 	Client     *Client
-	rawMessage []byte
+	RawMessage []byte
 	nm         int
 }
 
@@ -39,7 +39,7 @@ func (c *Context) Next() {
 }
 
 func (c *Context) ShouldBind(i interface{}) error {
-	err := json.Unmarshal(c.rawMessage, i)
+	err := json.Unmarshal(c.RawMessage, i)
 	if err != nil {
 		logrus.Debug("clientId: %d,err:%s", c.Client.ClientId, err.Error())
 		return ErrBind
