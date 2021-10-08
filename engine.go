@@ -6,12 +6,16 @@ import (
 
 type HandlerFunc func(c *Context)
 type MiddlewareList []HandlerFunc
-type Hook func(*Engine)
 
 type Engine struct {
 	Manager *Manager
 	RouteGroup
 	routeRule map[string]*routeRule
+}
+
+type Hook struct {
+	EngineHook func(*Engine)
+	ClientHook func(*Engine, *Client)
 }
 
 func (e *Engine) GetEngine() *Engine {
@@ -22,21 +26,21 @@ func (e *Engine) GetManager() *Manager {
 	return e.Manager
 }
 
-func (e *Engine) Run(w http.ResponseWriter, r *http.Request, hook ...Hook) {
+func (e *Engine) Run(w http.ResponseWriter, r *http.Request, hooks ...Hook) {
 
 	socket := getSocket(w, r)
 	if socket == nil {
 		return
 	}
 
-	if len(hook) > 0 {
-		hook[0](e)
+	if len(hooks) > 0 && hooks[0].EngineHook != nil {
+		hooks[0].EngineHook(e)
 	}
 	client := newClient(socket, e)
 	e.Manager.addClient(client)
 
-	if len(hook) > 1 {
-		hook[1](e)
+	if len(hooks) > 0 && hooks[0].EngineHook != nil {
+		hooks[0].ClientHook(e, client)
 	}
 
 	client.read()
