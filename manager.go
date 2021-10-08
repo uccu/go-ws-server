@@ -21,7 +21,7 @@ type Manager struct {
 	groups     *syncMap     // 分组的连接
 	systems    *syncMap     // 系统的连接
 	connect    chan *Client // 连接处理
-	disConnect chan *Client // 断开处理
+	DisConnect chan *Client // 断开处理
 	cancel     context.CancelFunc
 
 	connectFunc    []EventFunc
@@ -35,17 +35,20 @@ func newManager() *Manager {
 		groups:         new(syncMap),
 		systems:        new(syncMap),
 		connect:        make(chan *Client, 100),
-		disConnect:     make(chan *Client, 100),
+		DisConnect:     make(chan *Client, 100),
 		connectFunc:    make([]EventFunc, 0),
 		disconnectFunc: make([]EventFunc, 0),
 	}
 }
 
-func (manager *Manager) Connect(f EventFunc) {
+func (manager *Manager) WithConnect(f EventFunc) *Manager {
 	manager.connectFunc = append(manager.connectFunc, f)
+	return manager
 }
-func (manager *Manager) DisConnect(f EventFunc) {
+
+func (manager *Manager) WithDisConnect(f EventFunc) *Manager {
 	manager.disconnectFunc = append(manager.disconnectFunc, f)
+	return manager
 }
 
 // 管道处理程序
@@ -57,7 +60,7 @@ func (manager *Manager) start() *Manager {
 			select {
 			case client := <-manager.connect:
 				manager.eventConnect(client)
-			case client := <-manager.disConnect:
+			case client := <-manager.DisConnect:
 				manager.eventDisconnect(client)
 			case <-ctx.Done():
 				return
@@ -67,7 +70,7 @@ func (manager *Manager) start() *Manager {
 	return manager
 }
 
-func (manager *Manager) close() {
+func (manager *Manager) Close() {
 	if manager.cancel != nil {
 		manager.cancel()
 	}

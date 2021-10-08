@@ -28,7 +28,7 @@ func (c *Client) read() {
 			messageType, message, err := c.Socket.ReadMessage()
 			if err != nil {
 				if messageType == -1 && websocket.IsCloseError(err, websocket.CloseGoingAway, websocket.CloseNormalClosure, websocket.CloseNoStatusReceived) {
-					c.engine.Manager.disConnect <- c
+					c.engine.Manager.DisConnect <- c
 					logrus.Debug("close disConnect, clientId: %d", c.ClientId)
 					return
 				} else if messageType != websocket.PingMessage {
@@ -86,7 +86,7 @@ func (c *Client) SendMessage(ack string, data interface{}) {
 	})
 	if err != nil {
 		logrus.Debug("send message err,clientId: %d,err:%s", c.ClientId, err.Error())
-		c.engine.Manager.disConnect <- c
+		c.engine.Manager.DisConnect <- c
 	}
 }
 
@@ -110,7 +110,7 @@ func (c *Client) SendErr(ack string, code int, msg string, datas ...interface{})
 	})
 	if err != nil {
 		logrus.Debug("send message err,clientId: %d,err:%s", c.ClientId, err.Error())
-		c.engine.Manager.disConnect <- c
+		c.engine.Manager.DisConnect <- c
 	}
 }
 

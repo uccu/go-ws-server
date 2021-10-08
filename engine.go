@@ -13,11 +13,6 @@ type Engine struct {
 	routeRule map[string]*routeRule
 }
 
-type Hook struct {
-	EngineHook func(*Engine)
-	ClientHook func(*Engine, *Client)
-}
-
 func (e *Engine) GetEngine() *Engine {
 	return e
 }
@@ -26,26 +21,19 @@ func (e *Engine) GetManager() *Manager {
 	return e.Manager
 }
 
-func (e *Engine) Run(w http.ResponseWriter, r *http.Request, hooks ...Hook) {
+func (e *Engine) Run(w http.ResponseWriter, r *http.Request) *Client {
 
 	socket := getSocket(w, r)
 	if socket == nil {
-		return
+		return nil
 	}
 
-	if len(hooks) > 0 && hooks[0].EngineHook != nil {
-		hooks[0].EngineHook(e)
-	}
 	client := newClient(socket, e)
 	e.Manager.addClient(client)
 
-	if len(hooks) > 0 && hooks[0].EngineHook != nil {
-		hooks[0].ClientHook(e, client)
-	}
-
 	client.read()
 	e.Manager.connect <- client
-
+	return client
 }
 
 func New() *Engine {
@@ -53,7 +41,7 @@ func New() *Engine {
 	engine.engine = engine
 	engine.Manager = newManager()
 	engine.middlewares = make(MiddlewareList, 0)
-	engine.routeRule = make(routeRuleMap, 0)
+	engine.routeRule = make(routeRuleMap)
 	engine.Manager.start()
 
 	return engine
