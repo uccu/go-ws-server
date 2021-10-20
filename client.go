@@ -29,27 +29,27 @@ func (c *Client) read() {
 			if err != nil {
 				if messageType == -1 && websocket.IsCloseError(err, websocket.CloseGoingAway, websocket.CloseNormalClosure, websocket.CloseNoStatusReceived) {
 					c.engine.Manager.DisConnect <- c
-					logrus.Debug("close disConnect, clientId: %d", c.ClientId)
+					logrus.Debugf("close disConnect, clientId: %s", c.ClientId)
 					return
 				} else if messageType != websocket.PingMessage {
-					logrus.Debug("other disConnect, clientId: %d", c.ClientId)
+					logrus.Debugf("other disConnect, clientId: %s", c.ClientId)
 					return
 				}
 			}
 			if messageType == websocket.TextMessage {
-				logrus.Debug("messageType:%d,message:%s", messageType, message)
+				logrus.Debugf("messageType:%d,message:%s", messageType, message)
 
 				ackData := &Ack{}
 				err := json.Unmarshal(message, ackData)
 				if err != nil {
-					logrus.Debug("unmarshal err, clientId: %d,err: %s", c.ClientId, err.Error())
+					logrus.Debugf("unmarshal err, clientId: %s,err: %s", c.ClientId, err.Error())
 					continue
 				}
 
 				ack := ackData.Ack
 				rule, ok := c.engine.routeRule[ack]
 				if !ok {
-					logrus.Debug("no router, clientId: %d", c.ClientId)
+					logrus.Debugf("no router, clientId: %s", c.ClientId)
 					continue
 				}
 
@@ -66,11 +66,11 @@ func (c *Client) read() {
 }
 
 type RetData struct {
-	MessageId string      `json:"messageId"`
-	Code      int         `json:"code"`
-	Msg       string      `json:"msg"`
-	Data      interface{} `json:"data"`
-	Ack       string      `json:"ack"`
+	MessageId string      `json:"messageId"` // 消息ID
+	Code      int         `json:"code"`      // 错误码
+	Msg       string      `json:"msg"`       // 错误消息
+	Data      interface{} `json:"data"`      // 数据内容
+	Ack       string      `json:"ack"`       // 请求路由
 }
 
 func (c *Client) SendMessage(ack string, data interface{}) {
@@ -85,7 +85,7 @@ func (c *Client) SendMessage(ack string, data interface{}) {
 		Data:      data,
 	})
 	if err != nil {
-		logrus.Debug("send message err,clientId: %d,err:%s", c.ClientId, err.Error())
+		logrus.Debugf("send message err,clientId: %s,err:%s", c.ClientId, err.Error())
 		c.engine.Manager.DisConnect <- c
 	}
 }
@@ -109,7 +109,7 @@ func (c *Client) SendErr(ack string, code int, msg string, datas ...interface{})
 		Data:      data,
 	})
 	if err != nil {
-		logrus.Debug("send message err,clientId: %d,err:%s", c.ClientId, err.Error())
+		logrus.Debugf("send message err,clientId: %s,err:%s", c.ClientId, err.Error())
 		c.engine.Manager.DisConnect <- c
 	}
 }

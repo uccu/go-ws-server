@@ -41,7 +41,7 @@ func (c *Context) Next() {
 func (c *Context) ShouldBind(i interface{}) error {
 	err := json.Unmarshal(c.RawMessage, i)
 	if err != nil {
-		logrus.Debug("clientId: %d,err:%s", c.Client.ClientId, err.Error())
+		logrus.Debugf("clientId: %s,err:%s", c.Client.ClientId, err.Error())
 		return ErrBind
 	}
 	return nil
