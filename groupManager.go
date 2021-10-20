@@ -1,7 +1,5 @@
 package ws
 
-import "sync"
-
 // 添加到分组
 func (manager *Manager) AddGroupClient(groupKey string, client *Client) {
 	if _, ok := client.GroupList[groupKey]; ok {
@@ -52,7 +50,7 @@ func (manager *Manager) GetGroupClientCount(groupKey string) int {
 // 获取分组的成员
 func (manager *Manager) GetGroupClientList(groupKey string, f func(clientId string) bool) {
 	if clientIdMap, ok := manager.groups.Load(groupKey); ok {
-		clientIdMap.(*sync.Map).Range(func(key, value interface{}) bool {
+		clientIdMap.(*syncMap).Range(func(key, value interface{}) bool {
 			return f(key.(string))
 		})
 	}

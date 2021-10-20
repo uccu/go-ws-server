@@ -1,7 +1,5 @@
 package ws
 
-import "sync"
-
 // 添加到系统
 func (manager *Manager) AddSystemClient(systemKey string, client *Client) {
 	if _, ok := client.SystemList[systemKey]; ok {
@@ -52,7 +50,7 @@ func (manager *Manager) GetSystemClientCount(systemKey string) int {
 // 获取系统的成员
 func (manager *Manager) GetSystemClientList(systemKey string, f func(clientId string) bool) {
 	if clientIdMap, ok := manager.systems.Load(systemKey); ok {
-		clientIdMap.(*sync.Map).Range(func(key, value interface{}) bool {
+		clientIdMap.(*syncMap).Range(func(key, value interface{}) bool {
 			return f(key.(string))
 		})
 	}
