@@ -10,7 +10,7 @@ type MiddlewareList []HandlerFunc
 type Engine struct {
 	Manager *Manager
 	RouteGroup
-	routeRule map[string]*routeRule
+	routerRule map[string]*routerRule
 }
 
 func (e *Engine) GetEngine() *Engine {
@@ -41,7 +41,7 @@ func New() *Engine {
 	engine.engine = engine
 	engine.Manager = newManager()
 	engine.middlewares = make(MiddlewareList, 0)
-	engine.routeRule = make(routeRuleMap)
+	engine.routerRule = make(routerRuleMap)
 	engine.Manager.start()
 
 	return engine

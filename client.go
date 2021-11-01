@@ -37,7 +37,6 @@ func (c *Client) read() {
 				}
 			}
 			if messageType == websocket.TextMessage {
-				logrus.Debugf("messageType:%d,message:%s", messageType, message)
 
 				ackData := &Ack{}
 				err := json.Unmarshal(message, ackData)
@@ -47,7 +46,7 @@ func (c *Client) read() {
 				}
 
 				ack := ackData.Ack
-				rule, ok := c.engine.routeRule[ack]
+				rule, ok := c.engine.routerRule[ack]
 				if !ok {
 					logrus.Debugf("no router, clientId: %s", c.ClientId)
 					continue

@@ -4,6 +4,12 @@ import (
 	"strings"
 )
 
+type Router interface {
+	Group(path string, m ...HandlerFunc) *RouteGroup
+	GET(path string, handleFunc HandlerFunc)
+	Use(m ...HandlerFunc)
+}
+
 type RouteGroup struct {
 	basePath    string
 	engine      *Engine
@@ -11,12 +17,12 @@ type RouteGroup struct {
 	middlewares MiddlewareList
 }
 
-type routeRule struct {
+type routerRule struct {
 	handleFunc  HandlerFunc
 	middlewares MiddlewareList
 }
 
-type routeRuleMap map[string]*routeRule
+type routerRuleMap map[string]*routerRule
 
 func (e *RouteGroup) Use(m ...HandlerFunc) {
 	e.middlewares = append(e.middlewares, m...)
@@ -48,5 +54,5 @@ func (e *RouteGroup) GET(path string, handleFunc HandlerFunc) {
 		group = group.upperGroup
 	}
 	path = strings.Trim(path, ".")
-	e.engine.routeRule[path] = &routeRule{handleFunc: handleFunc, middlewares: e.middlewares}
+	e.engine.routerRule[path] = &routerRule{handleFunc: handleFunc, middlewares: e.middlewares}
 }

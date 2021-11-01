@@ -9,7 +9,7 @@ import (
 
 var ErrBind = errors.New("bind error")
 
-func NewContext(ack string, client *Client, message []byte, rule *routeRule) *Context {
+func NewContext(ack string, client *Client, message []byte, rule *routerRule) *Context {
 	context := &Context{}
 	context.Ack = ack
 	context.Client = client
@@ -21,7 +21,7 @@ func NewContext(ack string, client *Client, message []byte, rule *routeRule) *Co
 
 type Context struct {
 	RequestId  string
-	rule       *routeRule
+	rule       *routerRule
 	Ack        string
 	Engine     *Engine
 	Client     *Client
