@@ -9,7 +9,7 @@ type MiddlewareList []HandlerFunc
 
 type Engine struct {
 	Manager *Manager
-	RouteGroup
+	routerGroup
 	routerRule map[string]*routerRule
 }
 

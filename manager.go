@@ -3,8 +3,6 @@ package ws
 import (
 	"context"
 	"sync"
-
-	"github.com/sirupsen/logrus"
 )
 
 type syncMap struct {
@@ -84,7 +82,6 @@ func (manager *Manager) eventConnect(client *Client) {
 		}
 	}
 
-	logrus.Infof("WS用户连接, clientId: %s", client.ClientId)
 	manager.addClient(client)
 }
 
@@ -95,7 +92,6 @@ func (manager *Manager) eventDisconnect(client *Client) {
 			return
 		}
 	}
-	logrus.Infof("WS用户断开, clientId: %s", client.ClientId)
 	client.Socket.Close()
 	manager.DelClient(client)
 	client.IsDeleted = true

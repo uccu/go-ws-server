@@ -5,15 +5,15 @@ import (
 )
 
 type Router interface {
-	Group(path string, m ...HandlerFunc) *RouteGroup
+	Group(path string, m ...HandlerFunc) *routerGroup
 	GET(path string, handleFunc HandlerFunc)
 	Use(m ...HandlerFunc)
 }
 
-type RouteGroup struct {
+type routerGroup struct {
 	basePath    string
 	engine      *Engine
-	upperGroup  *RouteGroup
+	upperGroup  *routerGroup
 	middlewares MiddlewareList
 }
 
@@ -24,16 +24,16 @@ type routerRule struct {
 
 type routerRuleMap map[string]*routerRule
 
-func (e *RouteGroup) Use(m ...HandlerFunc) {
+func (e *routerGroup) Use(m ...HandlerFunc) {
 	e.middlewares = append(e.middlewares, m...)
 }
 
-func (e *RouteGroup) Group(path string, m ...HandlerFunc) *RouteGroup {
+func (e *routerGroup) Group(path string, m ...HandlerFunc) *routerGroup {
 
 	path = strings.ReplaceAll(path, "/", ".")
 	path = strings.Trim(path, ".")
 
-	group := &RouteGroup{
+	group := &routerGroup{
 		basePath:    path,
 		engine:      e.engine,
 		upperGroup:  e,
@@ -43,7 +43,7 @@ func (e *RouteGroup) Group(path string, m ...HandlerFunc) *RouteGroup {
 	return group
 }
 
-func (e *RouteGroup) GET(path string, handleFunc HandlerFunc) {
+func (e *routerGroup) GET(path string, handleFunc HandlerFunc) {
 	path = strings.ReplaceAll(path, "/", ".")
 	path = strings.Trim(path, ".")
 	group := e

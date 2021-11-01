@@ -29,10 +29,10 @@ func (c *Client) read() {
 			if err != nil {
 				if messageType == -1 && websocket.IsCloseError(err, websocket.CloseGoingAway, websocket.CloseNormalClosure, websocket.CloseNoStatusReceived) {
 					c.engine.Manager.DisConnect <- c
-					logrus.Debugf("close disConnect, clientId: %s", c.ClientId)
+					logrus.Warnf("close disConnect, clientId: %s", c.ClientId)
 					return
 				} else if messageType != websocket.PingMessage {
-					logrus.Debugf("other disConnect, clientId: %s", c.ClientId)
+					logrus.Warnf("other disConnect, clientId: %s", c.ClientId)
 					return
 				}
 			}
@@ -41,14 +41,14 @@ func (c *Client) read() {
 				ackData := &Ack{}
 				err := json.Unmarshal(message, ackData)
 				if err != nil {
-					logrus.Debugf("unmarshal err, clientId: %s,err: %s", c.ClientId, err.Error())
+					logrus.Warnf("unmarshal err, clientId: %s,err: %s", c.ClientId, err.Error())
 					continue
 				}
 
 				ack := ackData.Ack
 				rule, ok := c.engine.routerRule[ack]
 				if !ok {
-					logrus.Debugf("no router, clientId: %s", c.ClientId)
+					logrus.Warnf("no router, clientId: %s", c.ClientId)
 					continue
 				}
 
@@ -84,7 +84,7 @@ func (c *Client) SendMessage(ack string, data interface{}) {
 		Data:      data,
 	})
 	if err != nil {
-		logrus.Debugf("send message err,clientId: %s,err:%s", c.ClientId, err.Error())
+		logrus.Warnf("send message err,clientId: %s,err:%s", c.ClientId, err.Error())
 		c.engine.Manager.DisConnect <- c
 	}
 }
@@ -108,7 +108,7 @@ func (c *Client) SendErr(ack string, code int, msg string, datas ...interface{})
 		Data:      data,
 	})
 	if err != nil {
-		logrus.Debugf("send message err,clientId: %s,err:%s", c.ClientId, err.Error())
+		logrus.Warnf("send message err,clientId: %s,err:%s", c.ClientId, err.Error())
 		c.engine.Manager.DisConnect <- c
 	}
 }
