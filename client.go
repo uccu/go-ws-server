@@ -2,6 +2,7 @@ package ws
 
 import (
 	"encoding/json"
+	"sync"
 
 	"github.com/gorilla/websocket"
 	"github.com/sirupsen/logrus"
@@ -16,6 +17,7 @@ type Client struct {
 	GroupList  map[string]bool
 	SystemList map[string]bool
 	engine     *Engine
+	mu         sync.Mutex
 }
 
 type Ack struct {
@@ -78,6 +80,9 @@ func (c *Client) SendMessage(ack string, data interface{}) {
 		data = struct{}{}
 	}
 
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	err := c.Socket.WriteJSON(&RetData{
 		MessageId: GetRandomStri(10),
 		Ack:       ack,
@@ -99,6 +104,9 @@ func (c *Client) SendErr(ack string, code int, msg string, datas ...interface{})
 	if data == nil {
 		data = struct{}{}
 	}
+
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
 	err := c.Socket.WriteJSON(&RetData{
 		MessageId: GetRandomStri(10),
